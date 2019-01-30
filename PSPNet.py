@@ -271,7 +271,6 @@ def build_pspnet(nb_classes, resnet_layers, input_shape, activation='softmax'):
     return model
 
 
-
 class PSPNet(Network):
     def defualt_operating_shape(self):
         return (473, 473, 3)

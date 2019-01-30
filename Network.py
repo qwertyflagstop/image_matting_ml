@@ -7,9 +7,10 @@ import shutil
 
 class Network(object):
 
-    def __init__(self,name):
+    def __init__(self, name, classes):
         super(Network, self).__init__()
         self.name = name
+        self.classes = classes
         self.model = self.make_model()
 
     def defualt_operating_shape(self):
