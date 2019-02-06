@@ -38,11 +38,14 @@ class Network(object):
         save_name = 'weight/{}.h5'.format(self.name)
         self.model.save_weights(save_name)
 
+    def predict(self, x):
+        return self.model.predict(x)
+
     def __call__(self, *args, **kwargs):
         x = args[0]
         if (len(x.shape)==3):
             x = np.expand_dims(x,0)
-        y = self.model.predict(x)
+        y = self.predict(x)
         return y
 
 

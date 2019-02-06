@@ -53,6 +53,5 @@ class UNet(Network):
         return model
 
 
-
 if __name__ == '__main__':
     n = UNet('UNet',['test' for x in range(0,10)])

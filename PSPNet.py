@@ -272,6 +272,10 @@ def build_pspnet(nb_classes, resnet_layers, input_shape, activation='softmax'):
 
 
 class PSPNet(Network):
+
+    def __init__(self):
+        super(PSPNet, self).__init__('pspnet101', ['test' for x in np.arange(0,21)])
+    
     def defualt_operating_shape(self):
         return (473, 473, 3)
 
@@ -289,7 +293,7 @@ class PSPNet(Network):
         h_ori, w_ori = img.shape[:2]
 
         # Preprocess
-        img = misc.imresize(img, self.defualt_operating_shape()[0:1])
+        #img = misc.imresize(img, self.defualt_operating_shape()[0:1])
 
         img = img - DATA_MEAN
         img = img[:, :, ::-1]  # RGB => BGR
@@ -298,18 +302,16 @@ class PSPNet(Network):
 
         probs = self.feed_forward(img, flip_evaluation)
 
-        if img.shape[0:1] != self.input_shape:  # upscale prediction if necessary
-            h, w = probs.shape[:2]
-            probs = ndimage.zoom(probs, (1. * h_ori / h, 1. * w_ori / w, 1.),
-                                 order=1, prefilter=False)
+        # if img.shape[0:1] != self.input_shape:  # upscale prediction if necessary
+        #     h, w = probs.shape[:2]
+        #     probs = ndimage.zoom(probs, (1. * h_ori / h, 1. * w_ori / w, 1.),
+        #                          order=1, prefilter=False)
 
         print("Finished prediction...")
-
-        return probs
+        classes = np.argmax(probs, axis=-1).astype(np.uint8)
+        return classes
 
     def feed_forward(self, data, flip_evaluation=False):
-        assert data.shape == (self.input_shape[0], self.input_shape[1], 3)
-
         if flip_evaluation:
             print("Predict flipped")
             input_with_flipped = np.array(
@@ -318,9 +320,9 @@ class PSPNet(Network):
             prediction = (prediction_with_flipped[
                           0] + np.fliplr(prediction_with_flipped[1])) / 2.0
         else:
-            prediction = self.model.predict(np.expand_dims(data, 0))[0]
+            prediction = self.model.predict(data)[0]
         return prediction
 
 if __name__ == '__main__':
-    n = PSPNet('pspnet101')
+    n = PSPNet()
     n.load_weights()
