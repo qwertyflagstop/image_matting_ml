@@ -14,10 +14,10 @@ def normalize_image(image):
     return (255.0 * ((image - image.min()) / (image.max() - image.min()))).astype(np.uint8)
 
 def segmentation_to_image(mask_np, class_list):
-    brights = np.ones_like(mask_np) *255
-    brights[np.where(mask_np==0)] = 0
+    brights = np.ones_like(mask_np) * 255
+    brights[np.where(mask_np==0)] = len(class_list)
     mask_hsv = np.stack([(mask_np / float(len(class_list)) * 255), brights, brights], axis=-1).astype(np.uint8)
-    im = Image.fromarray(mask_hsv,mode='HSV').convert('RGB')
+    im = Image.fromarray(mask_hsv, mode='HSV').convert('RGB')
     return im
 
 class SegnetBatchMaker(BatchMaker):
@@ -27,8 +27,8 @@ class SegnetBatchMaker(BatchMaker):
         self.images_data_set = hdf_file['images']
         self.masks_data_set = hdf_file['masks']
         self.class_list = [x.decode() for x in hdf_file.attrs['classes']]
-        self.validation_split_index = 200
-        self.epoch_length = 10000
+        self.validation_split_index = 30
+        self.epoch_length = self.images_data_set.shape[0]
         self.augmentor = ImageSegAugmentor()
         self.image_size = (640, 640)
         self.min_val_loss = 9999
@@ -56,7 +56,7 @@ class SegnetBatchMaker(BatchMaker):
         self.validation_images = (x, y)
         self.augmentation_enabled = True
 
-    def get_batch(self, offset, batch_size):
+    def get_batch(self, offset, batch_size, fixed_size=False):
         if self.augmentation_enabled:
             indexes = sorted(np.random.choice(self.images_data_set.shape[0]-1, batch_size, replace=False).tolist())
             b_size = 32 * np.random.randint(10, 15)
@@ -84,8 +84,8 @@ class SegnetBatchMaker(BatchMaker):
                 im = np.array(rgb_im).astype(np.uint8)
                 ma = (np.array(mask_im)).astype(np.uint8)
                 ma[np.where(ma==255)]=0 #255 = 0
-                #if self.augmentation_enabled:
-                #    im, ma = self.augmentor.augment_crop_images_masks(im, ma, len(self.class_list))
+                if self.augmentation_enabled:
+                   im, ma = self.augmentor.augment_crop_images_masks(im, ma, len(self.class_list))
                 im = (im.astype(np.float32) / 255.0)
                 ma = to_categorical(ma, num_classes=len(self.class_list)).astype(np.float32)
                 rgb_batch[i] = im
@@ -96,19 +96,21 @@ class SegnetBatchMaker(BatchMaker):
             return (None, None)
         return (rgb_batch, mask_batch)
 
-    def sample(self,location,num_samples,name_prefix):
+    def sample(self, location, num_samples,name_prefix):
         m = Image.new('RGB', (self.image_size[0]*num_samples, self.image_size[1]*2))
-        rgbs, masks = self.get_batch(location, num_samples)
         for j in np.arange(0, num_samples):
-            im = Image.fromarray(normalize_image(rgbs[j]))
-            im_t = segmentation_to_image(np.argmax(masks[j], axis=-1), self.class_list)
+            location = np.random.randint(0, self.epoch_length-1)
+            rgbs, masks = self.get_batch(location, 1, fixed_size=True)
+            im = Image.fromarray(normalize_image(rgbs[0]))
+            im_t = segmentation_to_image(np.argmax(masks[0], axis=-1), self.class_list)
             m.paste(im, (j * self.image_size[0], self.image_size[1]* 0))
             m.paste(im_t, (j * self.image_size[0], self.image_size[1]* 1))
         m.save('{}.png'.format(name_prefix))
 
 
 if __name__ == '__main__':
-    hdf_file = File('coco_val.hdf5')
+    hdf_file = File('coco_train_people.hdf5')
     m = SegnetBatchMaker(hdf_file)
-    m.augmentation_enabled = False
+    m.augmentation_enabled = True
     m.sample(0,10,'train_sample')
+    print('sampled')

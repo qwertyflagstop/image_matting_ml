@@ -64,16 +64,6 @@ class BatchMaker(object):
         Y = np.zeros((batch_size, 100))
         return (X, Y)
 
-    def sample(self,location,num_samples,name_prefix):
-        rgbs, labels = self.get_batch(location, num_samples)
-        while rgbs is None:
-            rgbs, masks = self.get_batch(location, num_samples)
-        m = Image.new('RGB', (rgbs[0].shape[1]*num_samples, rgbs[0].shape[0]))
-        for j in np.arange(0, num_samples):
-            rgbs, masks = self.get_batch(location, num_samples)
-            im = Image.fromarray(normalize_image(rgbs[j]))
-            m.paste(im, (j * rgbs[0].shape[1], rgbs[0].shape[1]*0))
-        m.save('{}.png'.format(name_prefix))
 
 class BatchGenerator(object):
     """

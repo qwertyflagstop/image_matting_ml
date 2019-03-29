@@ -9,7 +9,7 @@ class ImageSegAugmentor(object):
 
     def __init__(self):
         super(ImageSegAugmentor, self).__init__()
-        sometimes = lambda aug: Augments.Sometimes(0.6, aug)
+        sometimes = lambda aug: Augments.Sometimes(0.4, aug)
         self.pipeline = Augments.Sequential([
             Augments.OneOf([
             sometimes(Augments.Sharpen(alpha=(0, 0.5), lightness=(0.5, 2.0))),
@@ -18,10 +18,9 @@ class ImageSegAugmentor(object):
                 Augments.AverageBlur(k=(2, 8)),
                 Augments.MedianBlur(k=(3, 15)),
             ]))]),
-            sometimes(Augments.AdditiveGaussianNoise(loc=0, scale=5.0)),
-            sometimes(Augments.AddToHueAndSaturation((-20,20))),
-            Augments.Affine(scale=(0.95, 1.4)),
-            Augments.Affine(rotate=(-20, 20)),
+            sometimes(Augments.Multiply((0.8, 1.2), per_channel=True)),
+            sometimes(Augments.AdditiveGaussianNoise(loc=0, scale=7.0)),
+            sometimes(Augments.AddToHueAndSaturation((-30,30))),
         ],random_order=False)
 
     def augment_image(self, image):
