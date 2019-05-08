@@ -4,7 +4,7 @@ sudo apt-get install python-pip
 sudo apt-get install git
 pip install env
 virtualenv env
-./env/bin/pip install -r requirements_cpu.txt
+./env/bin/pip install -r requirements.txt
 mkdir weights
 # curl the weights
 
