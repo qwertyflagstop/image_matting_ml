@@ -1,0 +1,9 @@
+Cython==0.28.4
+h5py==2.9.0
+Keras==2.2.4
+Pillow==5.2.0
+pydot==1.0.29
+scikit-image==0.14.0
+scipy==1.1.0
+tensorboard==1.8.0
+tensorflow-gpu==1.8.0
